@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 import { specs } from './config/swagger';
 import authRoutes from './routes/authRoutes';
 import proveedorRoutes from './routes/proveedorRoutes';
+import solicitudRoutes from './routes/solicitudRoutes';
 
 dotenv.config();
 
@@ -24,5 +25,6 @@ app.get('/ping', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/proveedores', proveedorRoutes);
+app.use('/api/solicitudes', solicitudRoutes);
 
 export default app;
