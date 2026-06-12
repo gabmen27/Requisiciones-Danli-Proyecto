@@ -27,21 +27,10 @@ interface RequisicionAttributes {
 }
 
 type RequisicionCreationAttributes = Optional<RequisicionAttributes,
-  | 'id'
-  | 'solicitud_id'
-  | 'proveedor_id'
-  | 'proveedor_nombre_snap'
-  | 'rtn_proveedor_snap'
-  | 'codigo_presupuestario'
-  | 'expediente'
-  | 'subtotal'
-  | 'total_isv'
-  | 'total'
-  | 'aprobado_por'
-  | 'aprobado_por_dni'
-  | 'motivo_rechazo'
-  | 'observaciones'
-  | 'fecha_aprobacion'
+  'id' | 'solicitud_id' | 'proveedor_id' | 'proveedor_nombre_snap' | 'rtn_proveedor_snap' |
+  'codigo_presupuestario' | 'expediente' | 'subtotal' | 'total_isv' | 'total' |
+  'aprobado_por' | 'aprobado_por_dni' | 'motivo_rechazo' | 'observaciones' | 'fecha_aprobacion' |
+  'fecha_creacion'   // 👈 Agrega esta línea
 >;
 
 class Requisicion extends Model<RequisicionAttributes, RequisicionCreationAttributes> {

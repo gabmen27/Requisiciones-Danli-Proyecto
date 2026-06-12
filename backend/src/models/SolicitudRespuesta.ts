@@ -11,7 +11,7 @@ interface SolicitudRespuestaAttributes {
   fecha_respuesta: Date;
 }
 
-type SolicitudRespuestaCreationAttributes = Optional<SolicitudRespuestaAttributes, 'id' | 'archivo_pdf' | 'observaciones'>;
+type SolicitudRespuestaCreationAttributes = Optional<SolicitudRespuestaAttributes, 'id' | 'archivo_pdf' | 'observaciones' | 'fecha_respuesta'>;
 
 class SolicitudRespuesta extends Model<SolicitudRespuestaAttributes, SolicitudRespuestaCreationAttributes> {
   public id!: number;

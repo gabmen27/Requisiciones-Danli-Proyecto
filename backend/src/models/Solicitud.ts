@@ -13,7 +13,7 @@ interface SolicitudAttributes {
   fecha_respuesta: Date | null;
 }
 
-type SolicitudCreationAttributes = Optional<SolicitudAttributes, 'id' | 'fecha_respuesta'>;
+type SolicitudCreationAttributes = Optional<SolicitudAttributes, 'id' | 'fecha_respuesta' | 'fecha_solicitud'>;
 
 class Solicitud extends Model<SolicitudAttributes, SolicitudCreationAttributes> {
   public id!: number;

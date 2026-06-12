@@ -10,6 +10,12 @@ import OrdenCompraDetalle from './OrdenCompraDetalle';
 import Configuracion from './Configuracion';
 
 // Aquí puedes definir asociaciones si las necesitas. Por ahora, solo exportamos.
+Solicitud.hasOne(SolicitudRespuesta, { foreignKey: 'solicitud_id' });
+SolicitudRespuesta.belongsTo(Solicitud, { foreignKey: 'solicitud_id' });
+
+SolicitudRespuesta.hasMany(SolicitudRespuestaItem, { foreignKey: 'respuesta_id' });
+SolicitudRespuestaItem.belongsTo(SolicitudRespuesta, { foreignKey: 'respuesta_id' });
+
 export {
   User,
   Proveedor,
