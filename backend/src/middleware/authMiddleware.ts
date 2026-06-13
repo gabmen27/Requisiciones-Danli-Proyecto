@@ -1,29 +1,25 @@
 import { Request, Response, NextFunction } from 'express';
-import { verificarToken, TokenPayload } from '../utils/jwtHelper';
+import { verificarToken } from '../utils/jwtHelper';
 
-// Extendemos la interfaz Request de Express para incluir 'user'
 export interface AuthRequest extends Request {
-  user?: TokenPayload;
+  user?: {
+    id: number;
+    rol: string;
+    empleado_dni: string;
+    username: string;
+  };
 }
 
 export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
-  
   if (!authHeader) {
-    return res.status(401).json({ message: 'No autorizado: token no proporcionado' });
+    return res.status(401).json({ message: 'No autorizado, token requerido' });
   }
-
-  // El formato esperado es "Bearer <token>"
   const token = authHeader.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ message: 'No autorizado: formato de token inválido' });
-  }
-
   const decoded = verificarToken(token);
   if (!decoded) {
-    return res.status(401).json({ message: 'No autorizado: token inválido o expirado' });
+    return res.status(401).json({ message: 'Token inválido o expirado' });
   }
-
   req.user = decoded;
   next();
 };

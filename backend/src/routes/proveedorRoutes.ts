@@ -11,21 +11,20 @@ import { roleMiddleware } from '../middleware/roleMiddleware';
 
 const router = Router();
 
-// Todas las rutas requieren autenticación
-router.use(authMiddleware);
+router.use(authMiddleware); // Todas las rutas requieren autenticación
 
 /**
  * @openapi
  * /proveedores:
  *   get:
- *     tags:
- *       - Proveedores
  *     summary: Lista todos los proveedores activos
+ *     description: Cualquier usuario autenticado puede ver la lista de proveedores (solo los que están activos).
+ *     tags: [Proveedores]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Lista de proveedores
+ *         description: Lista de proveedores (vacía si no hay)
  *         content:
  *           application/json:
  *             schema:
@@ -33,7 +32,9 @@ router.use(authMiddleware);
  *               items:
  *                 $ref: '#/components/schemas/Proveedor'
  *       401:
- *         description: No autorizado
+ *         description: No autorizado (token inválido o faltante)
+ *       500:
+ *         description: Error interno del servidor
  */
 router.get('/', getProveedores);
 
@@ -41,9 +42,9 @@ router.get('/', getProveedores);
  * @openapi
  * /proveedores/{id}:
  *   get:
- *     tags:
- *       - Proveedores
- *     summary: Obtiene un proveedor por ID
+ *     summary: Obtiene un proveedor por su ID
+ *     description: Cualquier usuario autenticado puede consultar un proveedor específico.
+ *     tags: [Proveedores]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -52,6 +53,7 @@ router.get('/', getProveedores);
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID numérico del proveedor
  *     responses:
  *       200:
  *         description: Proveedor encontrado
@@ -59,10 +61,12 @@ router.get('/', getProveedores);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Proveedor'
- *       404:
- *         description: Proveedor no encontrado
  *       401:
  *         description: No autorizado
+ *       404:
+ *         description: Proveedor no encontrado
+ *       500:
+ *         description: Error interno del servidor
  */
 router.get('/:id', getProveedorById);
 
@@ -70,9 +74,9 @@ router.get('/:id', getProveedorById);
  * @openapi
  * /proveedores:
  *   post:
- *     tags:
- *       - Proveedores
- *     summary: Crea un nuevo proveedor (solo admin o compras)
+ *     summary: Crea un nuevo proveedor
+ *     description: Solo los roles `admin` o `compras` pueden crear proveedores. El RTN debe ser único y tener exactamente 14 dígitos.
+ *     tags: [Proveedores]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -87,23 +91,36 @@ router.get('/:id', getProveedorById);
  *             properties:
  *               nombre:
  *                 type: string
+ *                 description: Razón social o nombre comercial
  *               rtn:
  *                 type: string
+ *                 description: Registro Tributario Nacional (14 dígitos sin guiones)
  *               direccion:
  *                 type: string
+ *                 description: Dirección física (opcional)
  *               correo:
  *                 type: string
+ *                 description: Correo electrónico de contacto (opcional)
  *               telefono:
  *                 type: string
+ *                 description: Número de teléfono (opcional)
+ *           example:
+ *             nombre: "Papelería El Estudiante"
+ *             rtn: "06019887200321"
+ *             direccion: "Danlí, El Paraíso"
+ *             correo: "info@elestudiante.hn"
+ *             telefono: "2763-5678"
  *     responses:
  *       201:
  *         description: Proveedor creado exitosamente
  *       400:
- *         description: Datos inválidos o RTN duplicado
+ *         description: Datos inválidos (nombre vacío, RTN duplicado o con formato incorrecto)
  *       401:
  *         description: No autorizado
  *       403:
- *         description: Permisos insuficientes
+ *         description: Permisos insuficientes (rol no autorizado)
+ *       500:
+ *         description: Error interno del servidor
  */
 router.post('/', roleMiddleware(['admin', 'compras']), createProveedor);
 
@@ -111,9 +128,9 @@ router.post('/', roleMiddleware(['admin', 'compras']), createProveedor);
  * @openapi
  * /proveedores/{id}:
  *   put:
- *     tags:
- *       - Proveedores
- *     summary: Actualiza un proveedor existente (solo admin o compras)
+ *     summary: Actualiza un proveedor existente
+ *     description: Solo `admin` o `compras` pueden modificar proveedores. Se puede actualizar cualquier campo.
+ *     tags: [Proveedores]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -122,6 +139,7 @@ router.post('/', roleMiddleware(['admin', 'compras']), createProveedor);
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID del proveedor a modificar
  *     requestBody:
  *       required: true
  *       content:
@@ -139,15 +157,22 @@ router.post('/', roleMiddleware(['admin', 'compras']), createProveedor);
  *                 type: string
  *               telefono:
  *                 type: string
+ *           example:
+ *             nombre: "Papelería Central Actualizada"
+ *             telefono: "2763-9999"
  *     responses:
  *       200:
- *         description: Proveedor actualizado
- *       404:
- *         description: Proveedor no encontrado
+ *         description: Proveedor actualizado correctamente
+ *       400:
+ *         description: Datos inválidos (ej. RTN duplicado)
  *       401:
  *         description: No autorizado
  *       403:
  *         description: Permisos insuficientes
+ *       404:
+ *         description: Proveedor no encontrado
+ *       500:
+ *         description: Error interno del servidor
  */
 router.put('/:id', roleMiddleware(['admin', 'compras']), updateProveedor);
 
@@ -155,9 +180,9 @@ router.put('/:id', roleMiddleware(['admin', 'compras']), updateProveedor);
  * @openapi
  * /proveedores/{id}:
  *   delete:
- *     tags:
- *       - Proveedores
- *     summary: Elimina (desactiva) un proveedor (solo admin)
+ *     summary: Elimina (desactiva) un proveedor
+ *     description: Solo `admin` puede eliminar proveedores. El registro no se borra físicamente, solo se marca como inactivo.
+ *     tags: [Proveedores]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -166,15 +191,18 @@ router.put('/:id', roleMiddleware(['admin', 'compras']), updateProveedor);
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID del proveedor a eliminar
  *     responses:
  *       200:
- *         description: Proveedor eliminado (desactivado)
- *       404:
- *         description: Proveedor no encontrado
+ *         description: Proveedor desactivado exitosamente
  *       401:
  *         description: No autorizado
  *       403:
- *         description: Permisos insuficientes
+ *         description: Permisos insuficientes (solo admin)
+ *       404:
+ *         description: Proveedor no encontrado
+ *       500:
+ *         description: Error interno del servidor
  */
 router.delete('/:id', roleMiddleware(['admin']), deleteProveedor);
 

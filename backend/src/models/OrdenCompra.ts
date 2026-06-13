@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/sequelize';
+import OrdenCompraDetalle from './OrdenCompraDetalle';
 
 interface OrdenCompraAttributes {
   id: number;
@@ -26,7 +27,18 @@ interface OrdenCompraAttributes {
 }
 
 type OrdenCompraCreationAttributes = Optional<OrdenCompraAttributes,
-  'id' | 'requisicion_id' | 'notas' | 'snap_jefe_compras' | 'snap_gerente' | 'snap_alcalde' | 'fecha_entrega'
+  | 'id'
+  | 'requisicion_id'
+  | 'notas'
+  | 'snap_jefe_compras'
+  | 'snap_gerente'
+  | 'snap_alcalde'
+  | 'fecha_entrega'
+  | 'subtotal'        
+  | 'descuento'       
+  | 'impuesto'        
+  | 'total'           
+  | 'fecha_emision'   
 >;
 
 class OrdenCompra extends Model<OrdenCompraAttributes, OrdenCompraCreationAttributes> {
@@ -51,6 +63,8 @@ class OrdenCompra extends Model<OrdenCompraAttributes, OrdenCompraCreationAttrib
   public creado_por_dni!: string;
   public fecha_emision!: Date;
   public fecha_entrega!: Date | null;
+  public OrdenCompraDetalles?: OrdenCompraDetalle[];
+
 }
 
 OrdenCompra.init(
