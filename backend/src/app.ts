@@ -7,6 +7,9 @@ import { specs } from './config/swagger';
 import authRoutes from './routes/authRoutes';
 import proveedorRoutes from './routes/proveedorRoutes';
 import solicitudRoutes from './routes/solicitudRoutes';
+import ordenCompraRoutes from './routes/ordenCompraRoutes';
+import requisicionRoutes from './routes/requisicionRoutes';
+import usuarioRoutes from './routes/usuarioRoutes';
 
 dotenv.config();
 
@@ -26,5 +29,10 @@ app.get('/ping', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/proveedores', proveedorRoutes);
 app.use('/api/solicitudes', solicitudRoutes);
+app.use('/api/ordenes-compra', ordenCompraRoutes);
+app.use('/api/requisiciones', requisicionRoutes);
+app.use('/api/usuarios', usuarioRoutes);
+
+
 
 export default app;

@@ -6,33 +6,25 @@ import {
   respondSolicitud,
   cancelSolicitud,
 } from '../controllers/solicitudController';
-
 import { authMiddleware } from '../middleware/authMiddleware';
 import { roleMiddleware } from '../middleware/roleMiddleware';
 
 const router = Router();
-
-// Todas las rutas requieren autenticación
 router.use(authMiddleware);
 
 /**
  * @openapi
  * /solicitudes:
  *   get:
- *     tags:
- *       - Solicitudes
  *     summary: Lista todas las solicitudes
+ *     tags: [Solicitudes]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Lista de solicitudes
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Solicitud'
+ *       401:
+ *         description: No autorizado
  */
 router.get('/', getSolicitudes);
 
@@ -40,9 +32,10 @@ router.get('/', getSolicitudes);
  * @openapi
  * /solicitudes/{id}:
  *   get:
- *     tags:
- *       - Solicitudes
- *     summary: Obtiene una solicitud por ID con su respuesta
+ *     summary: Obtiene una solicitud por ID
+ *     tags: [Solicitudes]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -61,9 +54,10 @@ router.get('/:id', getSolicitudById);
  * @openapi
  * /solicitudes:
  *   post:
- *     tags:
- *       - Solicitudes
- *     summary: Crea una nueva solicitud (cualquier usuario autenticado)
+ *     summary: Crea una nueva solicitud
+ *     tags: [Solicitudes]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -82,6 +76,10 @@ router.get('/:id', getSolicitudById);
  *                 type: integer
  *               observaciones:
  *                 type: string
+ *           example:
+ *             tipo: "cotizacion"
+ *             departamento_id: 4
+ *             observaciones: "Se requiere cotización de 2 impresoras"
  *     responses:
  *       201:
  *         description: Creada exitosamente
@@ -96,9 +94,10 @@ router.post('/', createSolicitud);
  * @openapi
  * /solicitudes/{id}/responder:
  *   post:
- *     tags:
- *       - Solicitudes
- *     summary: Responde una solicitud (solo compras, bienes o admin)
+ *     summary: Responde una solicitud pendiente (solo compras, bienes o admin)
+ *     tags: [Solicitudes]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -119,10 +118,12 @@ router.post('/', createSolicitud);
  *                 enum: [pdf_cotizacion, listado_precios]
  *               archivo_pdf:
  *                 type: string
+ *                 description: Ruta del archivo PDF (obligatorio si tipo_respuesta = pdf_cotizacion)
  *               observaciones:
  *                 type: string
  *               items:
  *                 type: array
+ *                 description: Lista de productos/precios (obligatorio si tipo_respuesta = listado_precios)
  *                 items:
  *                   type: object
  *                   properties:
@@ -134,6 +135,23 @@ router.post('/', createSolicitud);
  *                       type: number
  *                     cantidad_disponible:
  *                       type: number
+ *           examples:
+ *             pdf_cotizacion:
+ *               summary: Respuesta con archivo PDF
+ *               value:
+ *                 tipo_respuesta: pdf_cotizacion
+ *                 archivo_pdf: "cotizacion.pdf"
+ *                 observaciones: "Cotización recibida de proveedor X"
+ *             listado_precios:
+ *               summary: Respuesta con listado de precios
+ *               value:
+ *                 tipo_respuesta: listado_precios
+ *                 observaciones: "Productos disponibles en bodega"
+ *                 items:
+ *                   - descripcion: "Resma de papel carta"
+ *                     unidad: "Resma"
+ *                     precio_unitario: 150
+ *                     cantidad_disponible: 45
  *     responses:
  *       200:
  *         description: Respuesta registrada
@@ -141,22 +159,17 @@ router.post('/', createSolicitud);
  *         description: Datos inválidos o solicitud ya respondida
  *       403:
  *         description: Permisos insuficientes
- *       404:
- *         description: Solicitud no encontrada
  */
-router.post(
-  '/:id/responder',
-  roleMiddleware(['compras', 'bienes', 'admin']),
-  respondSolicitud
-);
+router.post('/:id/responder', roleMiddleware(['compras', 'bienes', 'admin']), respondSolicitud);
 
 /**
  * @openapi
  * /solicitudes/{id}/cancelar:
  *   put:
- *     tags:
- *       - Solicitudes
  *     summary: Cancela una solicitud pendiente
+ *     tags: [Solicitudes]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -165,7 +178,7 @@ router.post(
  *           type: integer
  *     responses:
  *       200:
- *         description: Cancelada exitosamente
+ *         description: Cancelada
  *       400:
  *         description: No se puede cancelar (ya respondida)
  *       404:

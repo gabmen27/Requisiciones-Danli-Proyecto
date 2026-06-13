@@ -16,6 +16,13 @@ SolicitudRespuesta.belongsTo(Solicitud, { foreignKey: 'solicitud_id' });
 SolicitudRespuesta.hasMany(SolicitudRespuestaItem, { foreignKey: 'respuesta_id' });
 SolicitudRespuestaItem.belongsTo(SolicitudRespuesta, { foreignKey: 'respuesta_id' });
 
+Requisicion.hasMany(RequisicionDetalle, { foreignKey: 'requisicion_id', as: 'RequisicionDetalles' });
+RequisicionDetalle.belongsTo(Requisicion, { foreignKey: 'requisicion_id' });
+
+OrdenCompra.belongsTo(Proveedor, { foreignKey: 'proveedor_id' });
+OrdenCompra.hasMany(OrdenCompraDetalle, { foreignKey: 'orden_id', as: 'OrdenCompraDetalles' });
+OrdenCompraDetalle.belongsTo(OrdenCompra, { foreignKey: 'orden_id' });
+
 export {
   User,
   Proveedor,
