@@ -1,94 +1,121 @@
-# 🏛️ Backend - Sistema de Requisiciones (Municipalidad de Danlí)
+API RESTful para la gestión de solicitudes, requisiciones, órdenes de compra y usuarios.
 
-API RESTful para la gestión de solicitudes, requisiciones y órdenes de compra.
+## 🚀 Tecnologías
 
-## 🚀 Tecnologías Utilizadas
+- Node.js + Express + TypeScript
+- Sequelize (ORM) + MySQL
+- JWT para autenticación
+- Swagger para documentación interactiva
 
-- **Node.js** – Entorno de ejecución.
-- **Express.js** – Framework web.
-- **TypeScript** – Superset tipado de JavaScript.
-- **Sequelize** – ORM para la interacción con la base de datos.
-- **MySQL** – Sistema gestor de bases de datos relacional.
-- **JWT** – Autenticación basada en tokens.
-- **Swagger** – Documentación interactiva de la API.
+## 📋 Requisitos previos
 
-## 📋 Requisitos Previos
+- Node.js 18 o superior
+- MySQL 8 o superior corriendo localmente
+- Git
 
-- Node.js (versión 18 o superior).
-- MySQL Server (versión 8.0 o superior) en ejecución.
+## ⚙️ Instalación y configuración
 
-## ⚙️ Instalación y Configuración
+1. Clonar el repositorio y entrar a la carpeta `backend`:
 
-Sigue estos pasos para levantar el proyecto en tu máquina local:
-
-1. **Clonar el repositorio**
    ```bash
    git clone https://github.com/gabmen27/Requisiciones-Danli-Proyecto.git
    cd Requisiciones-Danli-Proyecto/backend
+2. Instalar dependencias:
 
-2. **Instalar dependencias**
-   ```bash
-   npm install
+    ```bash
+    npm install
 
-3. **Configurar variables de entorno**
-    Copia el archivo de ejemplo:
+3. Crear archivo de variables de entorno (copia el ejemplo):
+
     ```bash
     cp .env.example .env
 
-    Edita el archivo .env y completa con tus credenciales locales de MySQL.
+4. Editar el archivo `.env` con tus credenciales de MySQL y una clave JWT secreta:
 
-4. **Preparar la Base de Datos**
-    Asegúrate de que tu servidor MySQL esté corriendo.
-    Ejecuta el script principal (Req_Danli.sql) para crear la estructura y los datos de prueba
+   ```env
+   PORT=4000
+   DB_HOST=localhost
+   DB_USER=root
+   DB_PASSWORD=tu_contraseña
+   DB_NAME=req_danli
+   JWT_SECRET=clave_super_secreta_para_jwt
 
-5. **Iniciar el servidor**
+5. Importar la base de datos con el script Req_Danli.sql (se encuentra en la raíz del proyecto        principal). Puedes hacerlo desde MySQL Workbench o línea de comandos.
+
+6. Iniciar el servidor en modo desarrollo:
+
     ```bash
     npm run dev
 
-    El servidor se ejecutará en http://localhost:4000.
+    El servidor correrá en http://localhost:4000.
 
-## Documentación de la API (Swagger)
-Una vez que el servidor esté en funcionamiento, puedes acceder a la documentación interactiva de todos los endpoints disponibles a través de la interfaz de Swagger UI:
+## 📚 Documentación de la API (Swagger)
 
-👉 http://localhost:4000/api-docs
+Una vez el servidor esté corriendo, accede a la documentación interactiva:
 
-Desde allí podrás ver los modelos de datos, probar las peticiones y entender cómo interactuar con el backend.
+👉 **http://localhost:4000/api-docs**
 
-## 👤 Credenciales de Prueba
-Para empezar a probar la API que requiere autenticación, puedes usar el siguiente usuario de prueba (incluido en el script de la base de datos):
+Allí podrás ver todos los endpoints, probarlos y consultar los modelos de datos.
 
-Usuario: admin
+## 👤 Credenciales de prueba
 
-Contraseña: admin123
+- **Usuario:** `admin`
+- **Contraseña:** `admin123`
 
+## 📁 Estructura del proyecto
+
+- `backend/`
+  - `src/`
+    - `config/` - Conexión a BD y configuración Swagger
+    - `controllers/` - Lógica de negocio
+    - `middleware/` - Autenticación y roles
+    - `models/` - Modelos Sequelize
+    - `routes/` - Endpoints con anotaciones Swagger
+    - `services/` - Bitácora, secuencias
+    - `utils/` - JWT, helpers
+    - `validations/` - Validaciones (opcional)
+  - `.env.example` - Plantilla de variables
+  - `package.json`
+  - `tsconfig.json`
+  - `README.md`
+
+## 🔐 Roles y permisos
+
+| Rol         | Funcionalidades principales                                      |
+|-------------|------------------------------------------------------------------|
+| **admin**   | Acceso total: gestionar usuarios, proveedores, solicitudes, requisiciones, órdenes |
+| **compras** | Gestionar proveedores, generar órdenes de compra, responder solicitudes de cotización |
+| **bienes**  | Responder solicitudes de listado de precios                      |
+| **gerencia / alcaldia** | Aprobar o rechazar requisiciones                      |
+| **solicitante** | Crear solicitudes y requisiciones (borrador)                  |
+
+## ✅ Endpoints principales
+
+| Módulo | Método | Ruta | Descripción |
+|--------|--------|------|-------------|
+| Autenticación | POST | `/auth/login` | Obtener token JWT |
+| Proveedores | GET, POST, PUT, DELETE | `/proveedores` | CRUD completo (con roles) |
+| Solicitudes | GET, POST, PUT | `/solicitudes` | Crear, listar, responder, cancelar |
+| Requisiciones | GET, POST, PUT | `/requisiciones` | Crear, aprobar, rechazar, enviar a aprobación |
+| Órdenes de Compra | GET, POST, PUT | `/ordenes-compra` | Generar desde requisición, entregar, cancelar |
+| Usuarios | GET, POST, PUT, DELETE | `/usuarios` | CRUD de usuarios (solo admin) |
+
+## 🧪 Pruebas rápidas (con cURL)
+
+    ```bash
+    # Login
+    curl -X POST http://localhost:4000/api/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{"username":"admin","password":"admin123"}'
+
+    # Listar proveedores (requiere token)
+    curl -X GET http://localhost:4000/api/proveedores \
+    -H "Authorization: Bearer <token>"
 
 ## 🤝 Contribución
 
-Si deseas contribuir al proyecto, por favor sigue estos pasos:
+Si deseas contribuir, por favor trabaja sobre una rama `feature/` y luego abre un Pull Request hacia `develop`. No se permite código directo a `main`.
 
-Crea una rama nueva (git checkout -b feature/nueva-funcionalidad)
+## 📄 Licencia
 
-Realiza tus cambios y haz commit (git commit -m 'Agrega nueva funcionalidad')
-
-Sube la rama (git push origin feature/nueva-funcionalidad)
-
-Abre un Pull Request en GitHub.
-
-
-## Estructura del proyecto
-
-```bash
-backend/
-├── src/
-│   ├── config/          # Conexión a BD y Swagger
-│   ├── controllers/     # Lógica de negocio
-│   ├── middleware/      # Autenticación y roles
-│   ├── models/          # Modelos Sequelize
-│   ├── routes/          # Endpoints de la API
-│   ├── services/        # Servicios (bitácora, secuencias)
-│   ├── utils/           # Utilidades (JWT)
-│   └── validations/     # Validaciones con express-validator
-├── .env.example         # Plantilla de variables de entorno
-├── package.json
-├── tsconfig.json
-└── README.md
+Proyecto académico – sin licencia específica.
