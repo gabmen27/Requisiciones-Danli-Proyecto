@@ -1,3 +1,71 @@
+# README — Requisiciones Danlí
+## Cambios y archivos nuevos · Frontend + Backend
+
+---
+
+## BACKEND
+
+### Archivos nuevos
+
+#### `src/controllers/dashboardController.ts`
+**Por qué se creó:** El dashboard necesita estadísticas en tiempo real (conteos de proveedores, solicitudes, requisiciones y órdenes) y tres conjuntos de datos para las gráficas (requisiciones por estado, órdenes por mes, solicitudes por tipo). Se centralizó aquí para mantener la separación de responsabilidades del patrón MVC que ya usa el proyecto.
+
+Exporta dos funciones:
+- `getStats` — requiere autenticación, devuelve todos los números del dashboard
+- `getConfiguracionPublica` — **sin autenticación**, devuelve solo nombre, escudo y logo para que el login pueda mostrarlos antes de que el usuario inicie sesión
+
+#### `src/routes/dashboardRoutes.ts`
+**Por qué se creó:** Registra las dos rutas del dashboard:
+- `GET /api/dashboard/stats` — protegida con `authMiddleware`
+- `GET /api/dashboard/publica` — pública, sin token, usada por el login
+
+#### `src/routes/configuracionRoutes.ts`
+**Por qué se creó:** La tabla `configuracion` tiene datos institucionales (autoridades, prefijos de numeración, logos, ISV) que el administrador necesita editar desde la interfaz. Se creó un CRUD específico para esta tabla con tres endpoints:
+- `GET /api/configuracion` — lee toda la configuración (con auth)
+- `PUT /api/configuracion` — actualiza todos los campos de texto (solo admin)
+- `POST /api/configuracion/upload-logo` — sube escudo o logo al servidor y guarda la ruta en BD (solo admin)
+
+Usa **multer** para el manejo de archivos. El flujo es: recibe el archivo → lo guarda con nombre temporal → lo renombra según el campo (`escudo.png` o `logo.png`) → guarda la ruta relativa en la BD. Así el frontend puede construir la URL completa con `http://localhost:5000/uploads/logos/escudo.png`.
+
+---
+
+### Archivos modificados
+
+#### `src/app.ts`
+Se agregaron cuatro líneas:
+
+```typescript
+import path from 'path';
+import dashboardRoutes from './routes/dashboardRoutes';
+import configuracionRoutes from './routes/configuracionRoutes';
+
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/api/dashboard',     dashboardRoutes);
+app.use('/api/configuracion', configuracionRoutes);
+```
+
+**Por qué:** 
+- `express.static` sirve las imágenes subidas (logos, escudos) como archivos estáticos accesibles desde el frontend
+- Las dos rutas nuevas registran los módulos de dashboard y configuración
+- Se configuró CORS con `origin: 'http://localhost:3000'` y `helmet` con `crossOriginResourcePolicy: 'cross-origin'` para permitir que el frontend cargue imágenes desde el backend sin errores de CORS
+
+---
+
+### Dependencias nuevas instaladas (backend)
+
+```bash
+npm install multer
+npm install --save-dev @types/multer
+```
+
+**Por qué:** Multer maneja la recepción de archivos en formularios `multipart/form-data`, que es el formato estándar para subir imágenes desde un navegador.
+
+---
+
+### Carpeta nueva
+
+
+
 API RESTful para la gestión de solicitudes, requisiciones, órdenes de compra y usuarios.
 
 ## 🚀 Tecnologías
