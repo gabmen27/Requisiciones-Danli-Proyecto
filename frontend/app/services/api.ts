@@ -3,17 +3,21 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api",
   timeout: 10000,
 });
 
 // INTERCEPTOR REQUEST: lee el token de localStorage y lo adjunta al header
 // Así no tienes que escribir Authorization: Bearer ... en cada llamada
+// INTERCEPTOR REQUEST: lee el token de localStorage y lo adjunta al header
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  // ✅ Obtener el token de la clave correcta
+  const token = localStorage.getItem('token');
+  
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
   return config;
 });
 

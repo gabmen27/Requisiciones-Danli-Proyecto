@@ -8,29 +8,29 @@ const MENU = [
   {
     seccion: "PRINCIPAL",
     items: [
-      { id: "dashboard",     label: "Inicio",           ruta: "/dashboard",               roles: ["admin","compras","bienes","gerencia","alcaldia","solicitante"] },
+      { id: "dashboard", label: "Inicio", ruta: "/dashboard", roles: ["admin","compras","bienes","gerencia","alcaldia","solicitante"] },
     ]
   },
   {
     seccion: "COMPRAS",
     items: [
-      { id: "proveedores",   label: "Proveedores",       ruta: "/dashboard/proveedores",   roles: ["admin","compras"] },
-      { id: "solicitudes",   label: "Solicitudes",       ruta: "/dashboard/solicitudes",   roles: ["admin","compras","bienes","solicitante"] },
+      { id: "proveedores",   label: "Proveedores",       ruta: "/dashboard/proveedores", roles: ["admin","compras"] },
+      { id: "solicitudes",   label: "Solicitudes",       ruta: "/dashboard/solicitudes", roles: ["admin","compras","bienes","solicitante"] },
       { id: "requisiciones", label: "Requisiciones",     ruta: "/dashboard/requisiciones", roles: ["admin","compras","bienes","gerencia","alcaldia","solicitante"] },
-      { id: "ordenes",       label: "Órdenes de Compra", ruta: "/dashboard/ordenes",       roles: ["admin","compras","gerencia","alcaldia"] },
+      { id: "ordenes",       label: "Órdenes de Compra", ruta: "/dashboard/ordenes-compra", roles: ["admin","compras","gerencia","alcaldia","solicitante"] },
     ]
   },
   {
     seccion: "BIENES",
     items: [
-      { id: "kardex",        label: "Kardex",            ruta: "/dashboard/kardex",        roles: ["admin","bienes"] },
-      { id: "activos",       label: "Activos Fijos",     ruta: "/dashboard/activos",       roles: ["admin","bienes"] },
+      { id: "kardex",        label: "Kardex",            ruta: "/dashboard/kardex", roles: ["admin","bienes"] },
+      { id: "activos",       label: "Activos Fijos",     ruta: "/dashboard/activos", roles: ["admin","bienes"] },
     ]
   },
   {
     seccion: "ADMINISTRACIÓN",
     items: [
-      { id: "usuarios",      label: "Usuarios",          ruta: "/dashboard/usuarios",      roles: ["admin"] },
+      { id: "usuarios",      label: "Usuarios",          ruta: "/dashboard/usuarios", roles: ["admin"] },
       { id: "configuracion", label: "Configuración",     ruta: "/dashboard/configuracion", roles: ["admin"] },
     ]
   },
@@ -71,7 +71,7 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* Nav — scroll solo aquí */}
+      {/* Nav */}
       <nav className="px-2 py-3 flex flex-col gap-3 overflow-y-auto flex-1">
         {MENU.map((seccion) => {
           const itemsVisibles = seccion.items.filter(
@@ -108,7 +108,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Footer — siempre visible abajo */}
+      {/* Footer */}
       <div className="px-2 pb-3 border-t border-white/10 pt-3 flex-shrink-0">
         {user && abierto && (
           <div className="flex items-center gap-2 mb-2 px-1">
