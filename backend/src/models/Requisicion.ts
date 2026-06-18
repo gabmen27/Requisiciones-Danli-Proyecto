@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/sequelize';
+import RequisicionDetalle from './RequisicionDetalle';
 
 interface RequisicionAttributes {
   id: number;
@@ -30,7 +31,7 @@ type RequisicionCreationAttributes = Optional<RequisicionAttributes,
   'id' | 'solicitud_id' | 'proveedor_id' | 'proveedor_nombre_snap' | 'rtn_proveedor_snap' |
   'codigo_presupuestario' | 'expediente' | 'subtotal' | 'total_isv' | 'total' |
   'aprobado_por' | 'aprobado_por_dni' | 'motivo_rechazo' | 'observaciones' | 'fecha_aprobacion' |
-  'fecha_creacion'   // 👈 Agrega esta línea
+  'fecha_creacion'
 >;
 
 class Requisicion extends Model<RequisicionAttributes, RequisicionCreationAttributes> {
@@ -56,6 +57,7 @@ class Requisicion extends Model<RequisicionAttributes, RequisicionCreationAttrib
   public observaciones!: string | null;
   public fecha_creacion!: Date;
   public fecha_aprobacion!: Date | null;
+  public RequisicionDetalles?: RequisicionDetalle[];
 }
 
 Requisicion.init(
@@ -75,7 +77,7 @@ Requisicion.init(
     subtotal: { type: DataTypes.DECIMAL(14, 2), defaultValue: 0 },
     total_isv: { type: DataTypes.DECIMAL(14, 2), defaultValue: 0 },
     total: { type: DataTypes.DECIMAL(14, 2), defaultValue: 0 },
-    estado: { type: DataTypes.ENUM('borrador','pendiente','aprobada','rechazada','comprometida','anulada'), defaultValue: 'borrador' },
+    estado: { type: DataTypes.ENUM('borrador', 'pendiente', 'aprobada', 'rechazada', 'comprometida', 'anulada'), defaultValue: 'borrador' },
     aprobado_por: { type: DataTypes.ENUM('gerencia', 'alcaldia'), allowNull: true },
     aprobado_por_dni: { type: DataTypes.STRING(15), allowNull: true },
     motivo_rechazo: { type: DataTypes.TEXT, allowNull: true },
