@@ -25,26 +25,64 @@ export default function OrdenesPage() {
   const [ordenes, setOrdenes] = useState<Orden[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const token = getToken();
+  const [accionando, setAccionando] = useState<number | null>(null);
 
   const fetchOrdenes = useCallback(async () => {
     const t = localStorage.getItem("token");
     if (!t) { router.replace("/"); return; }
     setLoading(true);
+    setError("");
     try {
-      const res = await fetch("http://localhost:4000/api/ordenes-compra", {
+      const res = await fetch("http://localhost:5000/api/ordenes-compra", {
         headers: { Authorization: `Bearer ${t}` },
       });
+      if (!res.ok) throw new Error("Respuesta no exitosa");
       const data = await res.json();
       setOrdenes(Array.isArray(data) ? data : data.data || []);
-    } catch { setError("Error al cargar órdenes."); }
+    } catch {
+      setError("Error al cargar órdenes.");
+    }
     setLoading(false);
   }, [router]);
 
   useEffect(() => { fetchOrdenes(); }, [fetchOrdenes]);
 
+  const marcarEntregada = async (id: number) => {
+    const t = getToken();
+    setAccionando(id);
+    try {
+      const res = await fetch(`http://localhost:5000/api/ordenes-compra/${id}/entregar`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${t}` },
+      });
+      if (!res.ok) throw new Error();
+      await fetchOrdenes();
+    } catch {
+      alert("No se pudo marcar la orden como entregada.");
+    }
+    setAccionando(null);
+  };
+
+  const cancelarOrden = async (id: number) => {
+    if (!confirm("¿Seguro que deseas cancelar esta orden de compra?")) return;
+    const t = getToken();
+    setAccionando(id);
+    try {
+      const res = await fetch(`http://localhost:5000/api/ordenes-compra/${id}/cancelar`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${t}` },
+      });
+      if (!res.ok) throw new Error();
+      await fetchOrdenes();
+    } catch {
+      alert("No se pudo cancelar la orden.");
+    }
+    setAccionando(null);
+  };
+
   const estadoColor: Record<string, string> = {
     pendiente: "mod-badge--yellow",
+    emitida: "mod-badge--yellow",
     entregada: "mod-badge--green",
     cancelada: "mod-badge--red",
   };
@@ -85,10 +123,10 @@ export default function OrdenesPage() {
         {error && <div className="mod-alert mod-alert--error">{error}</div>}
         <div className="mod-table-wrap">
           <table className="mod-table">
-            <thead><tr>{["#","Número","Estado","Fecha Emisión","Total","Proveedor ID"].map(h=><th key={h}>{h}</th>)}</tr></thead>
+            <thead><tr>{["#","Número","Estado","Fecha Emisión","Total","Proveedor ID","Acciones"].map(h=><th key={h}>{h}</th>)}</tr></thead>
             <tbody>
-              {loading ? <tr><td colSpan={6} className="mod-empty">Cargando...</td></tr>
-              : ordenes.length === 0 ? <tr><td colSpan={6} className="mod-empty">No hay órdenes de compra registradas.</td></tr>
+              {loading ? <tr><td colSpan={7} className="mod-empty">Cargando...</td></tr>
+              : ordenes.length === 0 ? <tr><td colSpan={7} className="mod-empty">No hay órdenes de compra registradas.</td></tr>
               : ordenes.map(o => (
                 <tr key={o.id}>
                   <td>{o.id}</td><td>{o.numero}</td>
@@ -96,6 +134,27 @@ export default function OrdenesPage() {
                   <td>{o.fecha_emision ? new Date(o.fecha_emision).toLocaleDateString("es-HN") : "—"}</td>
                   <td>L. {Number(o.total || 0).toFixed(2)}</td>
                   <td>{o.proveedor_id}</td>
+                  <td>
+                    {o.estado === "emitida" && (
+                      <>
+                        <button
+                          disabled={accionando === o.id}
+                          onClick={() => marcarEntregada(o.id)}
+                          style={{ marginRight: 8, cursor: "pointer" }}
+                        >
+                          {accionando === o.id ? "..." : "Entregar"}
+                        </button>
+                        <button
+                          disabled={accionando === o.id}
+                          onClick={() => cancelarOrden(o.id)}
+                          style={{ cursor: "pointer" }}
+                        >
+                          {accionando === o.id ? "..." : "Cancelar"}
+                        </button>
+                      </>
+                    )}
+                    {o.estado !== "emitida" && "—"}
+                  </td>
                 </tr>
               ))}
             </tbody>
