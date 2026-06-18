@@ -8,7 +8,6 @@ import { getRequisiciones, Requisicion, enviarAprobacion, aprobarRequisicion, re
 import Button from '@/app/components/ui/Button';
 import Table from '@/app/components/ui/Table';
 import Badge from '@/app/components/ui/Badge';
-import Card from '@/app/components/ui/Card';
 
 export default function RequisicionesPage() {
   const { user, token } = useAuth();
@@ -102,7 +101,12 @@ export default function RequisicionesPage() {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-primary">Requisiciones</h1>
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard" className="text-primary hover:underline flex items-center gap-1 text-sm">
+            ← Dashboard
+          </Link>
+          <h1 className="text-2xl font-bold text-primary">Requisiciones</h1>
+        </div>
         <Link href="/dashboard/requisiciones/nueva">
           <Button variant="primary" className="shadow-md hover:shadow-lg transition-shadow">
             + Nueva Requisición
@@ -136,33 +140,26 @@ export default function RequisicionesPage() {
                 {new Date(req.fecha_creacion).toLocaleDateString('es-HN')}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <Link href={`/dashboard/requisiciones/${req.id}`} className="text-primary hover:underline mr-3">
-                  Ver
-                </Link>
-                {req.estado === 'borrador' && (
-                  <button
-                    onClick={() => handleEnviarAprobacion(req.id)}
-                    className="text-secondary hover:underline mr-3"
-                  >
-                    Enviar
-                  </button>
-                )}
-                {req.estado === 'pendiente' && (user?.rol === 'gerencia' || user?.rol === 'alcaldia' || user?.rol === 'admin') && (
-                  <>
-                    <button
-                      onClick={() => handleAprobar(req.id)}
-                      className="text-success hover:underline mr-3"
-                    >
-                      Aprobar
-                    </button>
-                    <button
-                      onClick={() => handleRechazar(req.id)}
-                      className="text-danger hover:underline"
-                    >
-                      Rechazar
-                    </button>
-                  </>
-                )}
+                <div className="flex gap-2 flex-wrap">
+                  <Link href={`/dashboard/requisiciones/${req.id}`}>
+                    <Button variant="primary" size="sm">Ver</Button>
+                  </Link>
+                  {req.estado === 'borrador' && (
+                    <Button variant="warning" size="sm" onClick={() => handleEnviarAprobacion(req.id)}>
+                      Enviar
+                    </Button>
+                  )}
+                  {req.estado === 'pendiente' && (user?.rol === 'gerencia' || user?.rol === 'alcaldia' || user?.rol === 'admin') && (
+                    <>
+                      <Button variant="success" size="sm" onClick={() => handleAprobar(req.id)}>
+                        Aprobar
+                      </Button>
+                      <Button variant="danger" size="sm" onClick={() => handleRechazar(req.id)}>
+                        Rechazar
+                      </Button>
+                    </>
+                  )}
+                </div>
               </td>
             </tr>
           ))

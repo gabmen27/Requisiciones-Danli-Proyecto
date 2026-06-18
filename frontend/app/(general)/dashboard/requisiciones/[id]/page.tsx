@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/app/context/AuthContext';
 import {
   getRequisicionById,
@@ -124,6 +125,12 @@ export default function RequisicionDetallePage() {
     return labels[estado] || estado;
   };
 
+  const formatCurrency = (value: any): string => {
+    const num = Number(value);
+    if (isNaN(num)) return '0.00';
+    return num.toFixed(2);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -145,19 +152,17 @@ export default function RequisicionDetallePage() {
   const isGerenciaOrAlcaldia = user?.rol === 'gerencia' || user?.rol === 'alcaldia' || user?.rol === 'admin';
   const isComprasOrAdmin = user?.rol === 'compras' || user?.rol === 'admin';
 
-  // Función para formatear números con seguridad
-  const formatCurrency = (value: any): string => {
-    const num = Number(value);
-    if (isNaN(num)) return '0.00';
-    return num.toFixed(2);
-  };
-
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-primary">
-          Requisición {requisicion.numero}
-        </h1>
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard" className="text-primary hover:underline flex items-center gap-1 text-sm">
+            ← Dashboard
+          </Link>
+          <h1 className="text-2xl font-bold text-primary">
+            Requisición {requisicion.numero}
+          </h1>
+        </div>
         <button
           onClick={() => router.push('/dashboard/requisiciones')}
           className="text-primary hover:underline"

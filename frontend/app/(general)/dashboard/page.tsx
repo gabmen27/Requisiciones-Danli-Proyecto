@@ -1,10 +1,9 @@
-"use client";
+'use client';
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Chart, registerables } from "chart.js";
 import { useAuth } from "../../context/AuthContext";
-import Sidebar from "../../component/Sidebar";
 import api from "../../services/api";
 
 Chart.register(...registerables);
@@ -34,7 +33,7 @@ const ROL_LABEL: Record<string, string> = {
   solicitante: "Solicitante",
 };
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "http://localhost:4000"; // Ajustado al puerto del backend
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -150,8 +149,6 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
-      <Sidebar />
-
       <main className="flex-1 flex flex-col overflow-y-auto">
 
         {/* Header */}

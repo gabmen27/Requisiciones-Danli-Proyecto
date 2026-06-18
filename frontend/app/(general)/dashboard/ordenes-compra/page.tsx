@@ -75,7 +75,12 @@ export default function OrdenesCompraPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold text-primary mb-6">Órdenes de Compra</h1>
+      <div className="flex items-center gap-4 mb-6">
+        <Link href="/dashboard" className="text-primary hover:underline flex items-center gap-1 text-sm">
+          ← Dashboard
+        </Link>
+        <h1 className="text-2xl font-bold text-primary">Órdenes de Compra</h1>
+      </div>
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -103,25 +108,29 @@ export default function OrdenesCompraPage() {
                 {new Date(orden.fecha_emision).toLocaleDateString('es-HN')}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <Link href={`/dashboard/ordenes-compra/${orden.id}`} className="text-primary hover:underline mr-3">
-                  Ver
-                </Link>
-                {orden.estado === 'emitida' && (user?.rol === 'compras' || user?.rol === 'admin') && (
-                  <>
-                    <button
-                      onClick={() => handleEntregar(orden.id)}
-                      className="text-success hover:underline mr-3"
-                    >
-                      Entregar
-                    </button>
-                    <button
-                      onClick={() => handleCancelar(orden.id)}
-                      className="text-danger hover:underline"
-                    >
-                      Cancelar
-                    </button>
-                  </>
-                )}
+                <div className="flex gap-2 flex-wrap">
+                  <Link href={`/dashboard/ordenes-compra/${orden.id}`}>
+                    <Button variant="primary" size="sm">Ver</Button>
+                  </Link>
+                  {orden.estado === 'emitida' && (user?.rol === 'compras' || user?.rol === 'admin') && (
+                    <>
+                      <Button
+                        variant="success"
+                        size="sm"
+                        onClick={() => handleEntregar(orden.id)}
+                      >
+                        Entregar
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleCancelar(orden.id)}
+                      >
+                        Cancelar
+                      </Button>
+                    </>
+                  )}
+                </div>
               </td>
             </tr>
           ))

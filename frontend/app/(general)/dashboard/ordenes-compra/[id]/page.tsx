@@ -2,11 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/app/context/AuthContext';
 import { getOrdenCompraById, OrdenCompra, marcarEntregada, cancelarOrden } from '@/app/services/ordenCompraService';
 import Button from '@/app/components/ui/Button';
 import Card from '@/app/components/ui/Card';
 import Badge from '@/app/components/ui/Badge';
+
+const formatCurrency = (value: any): string => {
+  const num = Number(value);
+  if (isNaN(num)) return '0.00';
+  return num.toFixed(2);
+};
 
 export default function OrdenCompraDetallePage() {
   const { id } = useParams();
@@ -99,9 +106,14 @@ export default function OrdenCompraDetallePage() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-primary">
-          Orden de Compra {orden.numero}
-        </h1>
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard" className="text-primary hover:underline flex items-center gap-1 text-sm">
+            ← Dashboard
+          </Link>
+          <h1 className="text-2xl font-bold text-primary">
+            Orden de Compra {orden.numero}
+          </h1>
+        </div>
         <button
           onClick={() => router.push('/dashboard/ordenes-compra')}
           className="text-primary hover:underline"
@@ -120,7 +132,9 @@ export default function OrdenCompraDetallePage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Estado</p>
-            <p className="font-medium"><Badge variant={getEstadoBadge(orden.estado)}>{orden.estado}</Badge></p>
+            <p className="font-medium">
+              <Badge variant={getEstadoBadge(orden.estado)}>{orden.estado}</Badge>
+            </p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Proveedor</p>
@@ -170,28 +184,32 @@ export default function OrdenCompraDetallePage() {
                     <td className="px-4 py-2">{det.numero_linea}</td>
                     <td className="px-4 py-2">{det.descripcion}</td>
                     <td className="px-4 py-2">{det.cantidad}</td>
-                    <td className="px-4 py-2">L. {det.precio_unitario.toFixed(2)}</td>
+                    <td className="px-4 py-2">
+                      L. {formatCurrency(det.precio_unitario)}
+                    </td>
                     <td className="px-4 py-2">{det.aplica_isv ? 'Sí' : 'No'}</td>
-                    <td className="px-4 py-2">L. {det.valor_total?.toFixed(2) || 0}</td>
+                    <td className="px-4 py-2">
+                      L. {formatCurrency(det.valor_total)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
               <tfoot className="bg-gray-50 font-semibold">
                 <tr>
                   <td colSpan={5} className="px-4 py-2 text-right">Subtotal:</td>
-                  <td className="px-4 py-2">L. {orden.subtotal.toFixed(2)}</td>
+                  <td className="px-4 py-2">L. {formatCurrency(orden.subtotal)}</td>
                 </tr>
                 <tr>
                   <td colSpan={5} className="px-4 py-2 text-right">Descuento:</td>
-                  <td className="px-4 py-2">L. {orden.descuento.toFixed(2)}</td>
+                  <td className="px-4 py-2">L. {formatCurrency(orden.descuento)}</td>
                 </tr>
                 <tr>
                   <td colSpan={5} className="px-4 py-2 text-right">ISV:</td>
-                  <td className="px-4 py-2">L. {orden.impuesto.toFixed(2)}</td>
+                  <td className="px-4 py-2">L. {formatCurrency(orden.impuesto)}</td>
                 </tr>
                 <tr>
                   <td colSpan={5} className="px-4 py-2 text-right">Total:</td>
-                  <td className="px-4 py-2">L. {orden.total.toFixed(2)}</td>
+                  <td className="px-4 py-2">L. {formatCurrency(orden.total)}</td>
                 </tr>
               </tfoot>
             </table>
@@ -201,10 +219,18 @@ export default function OrdenCompraDetallePage() {
 
       {orden.estado === 'emitida' && isComprasOrAdmin && (
         <div className="flex gap-3">
-          <Button onClick={handleEntregar} disabled={actionLoading} variant="success">
+          <Button
+            onClick={handleEntregar}
+            disabled={actionLoading}
+            variant="success"
+          >
             {actionLoading ? 'Procesando...' : 'Marcar como entregada'}
           </Button>
-          <Button onClick={handleCancelar} disabled={actionLoading} variant="danger">
+          <Button
+            onClick={handleCancelar}
+            disabled={actionLoading}
+            variant="danger"
+          >
             {actionLoading ? 'Procesando...' : 'Cancelar orden'}
           </Button>
         </div>
