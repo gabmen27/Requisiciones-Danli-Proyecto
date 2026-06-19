@@ -1,9 +1,5 @@
 import api from './api';
 
-// =============================================
-// 1. Definición de tipos (interfaces)
-// =============================================
-
 export interface RequisicionDetalle {
   id?: number;
   requisicion_id?: number;
@@ -39,27 +35,19 @@ export interface Requisicion {
   observaciones?: string | null;
   fecha_creacion: string;
   fecha_aprobacion?: string | null;
-  // Relación con los detalles (se incluye cuando se consulta por ID o con include)
   RequisicionDetalles?: RequisicionDetalle[];
 }
 
-// =============================================
-// 2. Funciones para consumir la API
-// =============================================
-
-// Obtener todas las requisiciones
 export const getRequisiciones = async (): Promise<Requisicion[]> => {
-  const response = await api.get('/requisiciones');
-  return response.data;
+  const res = await api.get('/requisiciones');
+  return res.data;
 };
 
-// Obtener una requisición por ID (incluye sus detalles)
 export const getRequisicionById = async (id: number): Promise<Requisicion> => {
-  const response = await api.get(`/requisiciones/${id}`);
-  return response.data;
+  const res = await api.get('/requisiciones/' + id);
+  return res.data;
 };
 
-// Crear una nueva requisición (estado borrador)
 export const createRequisicion = async (data: {
   tipo: string;
   departamento_id: number;
@@ -69,24 +57,26 @@ export const createRequisicion = async (data: {
   observaciones?: string;
   detalles: Omit<RequisicionDetalle, 'id' | 'requisicion_id' | 'valor_total'>[];
 }): Promise<Requisicion> => {
-  const response = await api.post('/requisiciones', data);
-  return response.data;
+  const res = await api.post('/requisiciones', data);
+  return res.data;
 };
 
-// Enviar a aprobación (borrador → pendiente)
 export const enviarAprobacion = async (id: number): Promise<Requisicion> => {
-  const response = await api.put(`/requisiciones/${id}/enviar-aprobacion`);
-  return response.data;
+  const res = await api.put('/requisiciones/' + id + '/enviar-aprobacion');
+  return res.data;
 };
 
-// Aprobar requisición (solo gerencia/alcaldía/admin)
 export const aprobarRequisicion = async (id: number, aprobado_por: 'gerencia' | 'alcaldia'): Promise<Requisicion> => {
-  const response = await api.put(`/requisiciones/${id}/aprobar`, { aprobado_por });
-  return response.data;
+  const res = await api.put('/requisiciones/' + id + '/aprobar', { aprobado_por });
+  return res.data;
 };
 
-// Rechazar requisición
 export const rechazarRequisicion = async (id: number, motivo?: string): Promise<Requisicion> => {
-  const response = await api.put(`/requisiciones/${id}/rechazar`, { motivo: motivo || '' });
-  return response.data;
+  const res = await api.put('/requisiciones/' + id + '/rechazar', { motivo: motivo || '' });
+  return res.data;
+};
+
+export const comprometerRequisicion = async (id: number): Promise<Requisicion> => {
+  const res = await api.put('/requisiciones/' + id + '/comprometer');
+  return res.data;
 };

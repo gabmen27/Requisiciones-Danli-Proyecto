@@ -1,174 +1,202 @@
 'use client';
-
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useAuth } from '@/app/context/AuthContext';
-import { getRequisicionById, enviarAprobacion, aprobarRequisicion, rechazarRequisicion, Requisicion } from '@/app/services/requisicionService';
-import { generarOrdenCompra } from '@/app/services/ordenCompraService';
-import Button from '@/app/components/ui/Button';
-import Card from '@/app/components/ui/Card';
-import Badge from '@/app/components/ui/Badge';
+import { useAuth } from '../../../../context/AuthContext';
+import { getRequisicionById, enviarAprobacion, aprobarRequisicion, rechazarRequisicion, comprometerRequisicion, Requisicion } from '../../../../services/requisicionService';
+import { generarOrdenCompra } from '../../../../services/ordenCompraService';
+import Sidebar from '../../../../component/Sidebar';
+
+const ESTADO_COLOR: Record<string, string> = {
+  borrador: 'bg-gray-100 text-gray-600', pendiente: 'bg-yellow-100 text-yellow-700',
+  aprobada: 'bg-green-100 text-green-700', rechazada: 'bg-red-100 text-red-700',
+  comprometida: 'bg-blue-100 text-blue-700', anulada: 'bg-gray-100 text-gray-500',
+};
+const ESTADO_LABEL: Record<string, string> = {
+  borrador: 'Borrador', pendiente: 'Pendiente', aprobada: 'Aprobada',
+  rechazada: 'Rechazada', comprometida: 'Comprometida', anulada: 'Anulada',
+};
 
 export default function RequisicionDetallePage() {
-  const { id } = useParams();
-  const router = useRouter();
-  const { user } = useAuth();
-  const [requisicion, setRequisicion] = useState<Requisicion | null>(null);
+  const { id }             = useParams<{ id: string }>();
+  const router             = useRouter();
+  const { user, cargando } = useAuth();
+  const [req,     setReq]     = useState<Requisicion | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [actionLoading, setActionLoading] = useState(false);
+  const [error,   setError]   = useState('');
+  const [busy,    setBusy]    = useState(false);
 
-  useEffect(() => {
-    if (!user) { router.push('/'); return; }
-    if (id) fetchRequisicion();
-  }, [id, user]); // eslint-disable-line
-
-  const fetchRequisicion = async () => {
+  const fetchReq = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getRequisicionById(Number(id));
-      setRequisicion(data);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar requisicion');
-    } finally {
-      setLoading(false);
+      setReq(await getRequisicionById(Number(id)));
+    } catch { setError('No se pudo cargar la requisicion'); }
+    finally { setLoading(false); }
+  }, [id]);
+
+  useEffect(() => {
+    if (!cargando && !user) { router.replace('/'); return; }
+    if (user && id) fetchReq();
+  }, [user, cargando, id, fetchReq, router]);
+
+  const run = async (fn: () => Promise<Requisicion | void>) => {
+    setBusy(true);
+    try { await fn(); await fetchReq(); }
+    catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } } };
+      setError(err?.response?.data?.message ?? 'Error al procesar');
     }
+    finally { setBusy(false); }
   };
 
-  const handleEnviarAprobacion = async () => {
-    if (!requisicion) return;
-    try {
-      setActionLoading(true);
-      await enviarAprobacion(requisicion.id);
-      await fetchRequisicion();
-    } catch (err: any) {
-      setError(err.message || 'Error');
-    } finally { setActionLoading(false); }
-  };
+  const fmt = (v: unknown) => { const n = Number(v); return isNaN(n) ? '0.00' : n.toFixed(2); };
 
-  const handleAprobar = async () => {
-    if (!requisicion) return;
-    try {
-      setActionLoading(true);
-      await aprobarRequisicion(requisicion.id, 'gerencia');
-      await fetchRequisicion();
-    } catch (err: any) {
-      setError(err.message || 'Error');
-    } finally { setActionLoading(false); }
-  };
+  if (cargando || !user) return null;
 
-  const handleRechazar = async () => {
-    if (!requisicion) return;
-    const motivo = prompt('Motivo del rechazo:');
-    if (motivo === null) return;
-    try {
-      setActionLoading(true);
-      await rechazarRequisicion(requisicion.id, motivo);
-      await fetchRequisicion();
-    } catch (err: any) {
-      setError(err.message || 'Error');
-    } finally { setActionLoading(false); }
-  };
-
-  const handleGenerarOrden = async () => {
-    if (!requisicion) return;
-    try {
-      setActionLoading(true);
-      const orden = await generarOrdenCompra({ requisicion_id: requisicion.id });
-      router.push("/dashboard/ordenes-compra/" + orden.id);
-    } catch (err: any) {
-      setError(err.message || 'Error al generar orden');
-    } finally { setActionLoading(false); }
-  };
-
-  const getEstadoBadge = (estado: string) => {
-    const map: Record<string, 'default' | 'success' | 'danger' | 'warning' | 'info'> = {
-      borrador: 'default', pendiente: 'warning', aprobada: 'success',
-      rechazada: 'danger', comprometida: 'info', anulada: 'default',
-    };
-    return map[estado] || 'default';
-  };
-
-  const getEstadoLabel = (estado: string) => {
-    const labels: Record<string, string> = {
-      borrador: 'Borrador', pendiente: 'Pendiente', aprobada: 'Aprobada',
-      rechazada: 'Rechazada', comprometida: 'Comprometida', anulada: 'Anulada',
-    };
-    return labels[estado] || estado;
-  };
-
-  const fmt = (value: any) => { const n = Number(value); return isNaN(n) ? '0.00' : n.toFixed(2); };
-
-  if (loading) return <div className="flex justify-center items-center h-64"><div className="text-gray-500">Cargando...</div></div>;
-  if (!requisicion) return <div className="p-6"><div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">No encontrada</div></div>;
-
-  const isGerenciaOrAlcaldia = user?.rol === 'gerencia' || user?.rol === 'alcaldia' || user?.rol === 'admin';
-  const isComprasOrAdmin = user?.rol === 'compras' || user?.rol === 'admin';
+  const esAprobador    = ['gerencia', 'alcaldia', 'admin'].includes(user.rol);
+  const esContabilidad = ['contabilidad', 'admin'].includes(user.rol);
+  const esCompras      = ['compras', 'admin'].includes(user.rol);
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-primary">Requisicion {requisicion.numero}</h1>
-        <button onClick={() => router.push('/dashboard/requisiciones')} className="text-primary hover:underline">← Volver</button>
-      </div>
-      {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
-      <Card className="mb-6">
-        <div className="grid grid-cols-2 gap-4">
-          <div><p className="text-sm text-gray-500">Tipo</p><p className="font-medium">{requisicion.tipo === 'compras' ? 'Compras' : 'Bienes'}</p></div>
-          <div><p className="text-sm text-gray-500">Estado</p><Badge variant={getEstadoBadge(requisicion.estado)}>{getEstadoLabel(requisicion.estado)}</Badge></div>
-          <div><p className="text-sm text-gray-500">Dirigida a</p><p className="font-medium capitalize">{requisicion.dirigida_a}</p></div>
-          <div><p className="text-sm text-gray-500">Fecha</p><p className="font-medium">{new Date(requisicion.fecha_creacion).toLocaleString('es-HN')}</p></div>
-          {requisicion.proveedor_nombre_snap && <div><p className="text-sm text-gray-500">Proveedor</p><p className="font-medium">{requisicion.proveedor_nombre_snap}</p></div>}
-          {requisicion.aprobado_por && <div><p className="text-sm text-gray-500">Aprobado por</p><p className="font-medium capitalize">{requisicion.aprobado_por}</p></div>}
-        </div>
-        {requisicion.observaciones && <div className="mt-4"><p className="text-sm text-gray-500">Observaciones</p><p className="font-medium">{requisicion.observaciones}</p></div>}
-      </Card>
-      {requisicion.RequisicionDetalles && requisicion.RequisicionDetalles.length > 0 && (
-        <Card className="mb-6">
-          <h3 className="text-lg font-semibold mb-3">Detalles</h3>
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">#</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Descripcion</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Cantidad</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Precio</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">ISV</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {requisicion.RequisicionDetalles.map((det) => (
-                <tr key={det.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2">{det.numero_linea}</td>
-                  <td className="px-4 py-2">{det.descripcion}</td>
-                  <td className="px-4 py-2">{det.cantidad}</td>
-                  <td className="px-4 py-2">L. {fmt(det.precio_unitario)}</td>
-                  <td className="px-4 py-2">{det.aplica_isv ? 'Si' : 'No'}</td>
-                  <td className="px-4 py-2">L. {fmt(det.valor_total)}</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot className="bg-gray-50 font-semibold">
-              <tr><td colSpan={5} className="px-4 py-2 text-right">Subtotal:</td><td className="px-4 py-2">L. {fmt(requisicion.subtotal)}</td></tr>
-              <tr><td colSpan={5} className="px-4 py-2 text-right">ISV:</td><td className="px-4 py-2">L. {fmt(requisicion.total_isv)}</td></tr>
-              <tr><td colSpan={5} className="px-4 py-2 text-right">Total:</td><td className="px-4 py-2">L. {fmt(requisicion.total)}</td></tr>
-            </tfoot>
-          </table>
-        </Card>
-      )}
-      <div className="flex gap-3 flex-wrap">
-        {requisicion.estado === 'borrador' && <Button onClick={handleEnviarAprobacion} disabled={actionLoading} variant="warning">{actionLoading ? 'Procesando...' : 'Enviar a Aprobacion'}</Button>}
-        {requisicion.estado === 'pendiente' && isGerenciaOrAlcaldia && (
-          <>
-            <Button onClick={handleAprobar} disabled={actionLoading} variant="success">{actionLoading ? 'Procesando...' : 'Aprobar'}</Button>
-            <Button onClick={handleRechazar} disabled={actionLoading} variant="danger">{actionLoading ? 'Procesando...' : 'Rechazar'}</Button>
-          </>
+    <div className="flex h-screen overflow-hidden bg-gray-100">
+      <Sidebar />
+      <main className="flex-1 flex flex-col overflow-y-auto">
+        <header className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10 flex items-center gap-4">
+          <button onClick={() => router.push('/dashboard/requisiciones')} className="text-gray-400 hover:text-gray-600 text-lg">←</button>
+          <div>
+            <p className="text-xs font-semibold tracking-widest text-gray-400 uppercase">General / Requisiciones</p>
+            <h1 className="text-xl font-bold text-[#1a1a2e]">{req?.numero ?? 'Cargando...'}</h1>
+          </div>
+        </header>
+
+        {error && <div className="mx-6 mt-4 px-4 py-3 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200">{error}</div>}
+
+        {loading ? (
+          <div className="p-12 text-center text-sm text-gray-400">Cargando...</div>
+        ) : !req ? (
+          <div className="p-12 text-center text-sm text-gray-400">No encontrada</div>
+        ) : (
+          <div className="p-6 flex flex-col gap-4 max-w-4xl">
+
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="text-sm font-bold text-gray-700 mb-4 pb-2 border-b border-gray-100">Informacion</h2>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Numero</p><p className="font-bold text-[#1b3a6b]">{req.numero}</p></div>
+                <div>
+                  <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Estado</p>
+                  <span className={"text-xs px-2 py-1 rounded font-medium " + (ESTADO_COLOR[req.estado] ?? '')}>
+                    {ESTADO_LABEL[req.estado] ?? req.estado}
+                  </span>
+                </div>
+                <div><p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Tipo</p><p className="capitalize">{req.tipo}</p></div>
+                <div><p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Dirigida a</p><p className="capitalize">{req.dirigida_a}</p></div>
+                <div><p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Fecha</p><p>{new Date(req.fecha_creacion).toLocaleDateString('es-HN')}</p></div>
+                {req.proveedor_nombre_snap && <div><p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Proveedor</p><p>{req.proveedor_nombre_snap}</p></div>}
+                {req.aprobado_por && <div><p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Aprobado por</p><p className="capitalize">{req.aprobado_por}</p></div>}
+                {req.motivo_rechazo && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Motivo rechazo</p>
+                    <p className="text-red-600">{req.motivo_rechazo}</p>
+                  </div>
+                )}
+                {req.observaciones && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Observaciones</p>
+                    <p>{req.observaciones}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {req.RequisicionDetalles && req.RequisicionDetalles.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <h2 className="text-sm font-bold text-gray-700 mb-4 pb-2 border-b border-gray-100">Detalles</h2>
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">#</th>
+                      <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Descripcion</th>
+                      <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">Unidad</th>
+                      <th className="text-right px-3 py-2 text-xs font-semibold text-gray-500">Cantidad</th>
+                      <th className="text-right px-3 py-2 text-xs font-semibold text-gray-500">Precio</th>
+                      <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500">ISV</th>
+                      <th className="text-right px-3 py-2 text-xs font-semibold text-gray-500">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {req.RequisicionDetalles.map((det) => (
+                      <tr key={det.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="px-3 py-2 text-gray-400">{det.numero_linea}</td>
+                        <td className="px-3 py-2">{det.descripcion}</td>
+                        <td className="px-3 py-2 text-gray-500">{det.unidad ?? 'Unidad'}</td>
+                        <td className="px-3 py-2 text-right">{det.cantidad}</td>
+                        <td className="px-3 py-2 text-right">L. {fmt(det.precio_unitario)}</td>
+                        <td className="px-3 py-2 text-center">{det.aplica_isv ? 'Si' : 'No'}</td>
+                        <td className="px-3 py-2 text-right font-medium">L. {fmt(det.valor_total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="border-t-2 border-gray-200">
+                    <tr><td colSpan={6} className="px-3 py-2 text-right text-xs font-semibold text-gray-500">Subtotal</td><td className="px-3 py-2 text-right font-medium">L. {fmt(req.subtotal)}</td></tr>
+                    <tr><td colSpan={6} className="px-3 py-2 text-right text-xs font-semibold text-gray-500">ISV</td><td className="px-3 py-2 text-right font-medium">L. {fmt(req.total_isv)}</td></tr>
+                    <tr className="bg-gray-50"><td colSpan={6} className="px-3 py-2 text-right text-sm font-bold text-gray-700">TOTAL</td><td className="px-3 py-2 text-right font-black text-[#1b3a6b]">L. {fmt(req.total)}</td></tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
+
+            <div className="flex gap-3 flex-wrap">
+              {req.estado === 'borrador' && (
+                <button onClick={() => run(() => enviarAprobacion(req.id))} disabled={busy}
+                  className="text-sm px-5 py-2 rounded-lg bg-yellow-500 text-white font-semibold hover:bg-yellow-600 disabled:opacity-60">
+                  {busy ? 'Procesando...' : 'Enviar a Aprobacion'}
+                </button>
+              )}
+              {req.estado === 'pendiente' && esAprobador && (
+                <>
+                  <button onClick={() => {
+                    if (!confirm('Aprobar esta requisicion?')) return;
+                    const ap = user.rol === 'alcaldia' ? 'alcaldia' : 'gerencia';
+                    run(() => aprobarRequisicion(req.id, ap));
+                  }} disabled={busy}
+                    className="text-sm px-5 py-2 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 disabled:opacity-60">
+                    {busy ? 'Procesando...' : 'Aprobar'}
+                  </button>
+                  <button onClick={() => {
+                    const motivo = prompt('Motivo del rechazo:');
+                    if (motivo === null) return;
+                    run(() => rechazarRequisicion(req.id, motivo));
+                  }} disabled={busy}
+                    className="text-sm px-5 py-2 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 disabled:opacity-60">
+                    {busy ? 'Procesando...' : 'Rechazar'}
+                  </button>
+                </>
+              )}
+              {req.estado === 'aprobada' && esContabilidad && (
+                <button onClick={() => {
+                  if (!confirm('Registrar compromiso presupuestario?')) return;
+                  run(() => comprometerRequisicion(req.id));
+                }} disabled={busy}
+                  className="text-sm px-5 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-60">
+                  {busy ? 'Procesando...' : 'Compromiso Presupuestario'}
+                </button>
+              )}
+              {req.estado === 'comprometida' && esCompras && (
+                <button onClick={() => {
+                  if (!confirm('Generar Orden de Compra?')) return;
+                  run(async () => {
+                    const oc = await generarOrdenCompra({ requisicion_id: req.id });
+                    router.push("/dashboard/ordenes-compra/" + oc.id);
+                  });
+                }} disabled={busy}
+                  className="text-sm px-5 py-2 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 disabled:opacity-60">
+                  {busy ? 'Generando...' : 'Generar Orden de Compra'}
+                </button>
+              )}
+            </div>
+
+          </div>
         )}
-        {(requisicion.estado === 'aprobada' || requisicion.estado === 'comprometida') && isComprasOrAdmin && (
-          <Button onClick={handleGenerarOrden} disabled={actionLoading} variant="secondary">{actionLoading ? 'Generando...' : 'Generar Orden de Compra'}</Button>
-        )}
-      </div>
+      </main>
     </div>
   );
 }
