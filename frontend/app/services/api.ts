@@ -9,11 +9,15 @@ const api = axios.create({
 
 // INTERCEPTOR REQUEST: lee el token de localStorage y lo adjunta al header
 // Así no tienes que escribir Authorization: Bearer ... en cada llamada
+// INTERCEPTOR REQUEST: lee el token de localStorage y lo adjunta al header
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  // ✅ Obtener el token de la clave correcta
+  const token = localStorage.getItem('token');
+  
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
   return config;
 });
 
@@ -36,7 +40,14 @@ export default api;
 // Respuesta exacta de tu authController: { token, user: { id, username, rol, empleado_dni } }
 export const authService = {
   login: (username: string, password: string) =>
-    api.post<{ token: string; user: { id: number; username: string; rol: string; empleado_dni: string } }>(
+    api.post<{ 
+      token: string; 
+      user: { 
+        id: number; 
+        username: string; 
+        rol: string; 
+        empleado_dni: string;
+        departamento_id: number | null } }>(
       "/auth/login",
       { username, password }
     ),

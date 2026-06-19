@@ -18,28 +18,35 @@ export const login = async (req: Request, res: Response) => {
     if (!passwordValido) {
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
+
+    // departamento_id va en el JWT para que los controllers filtren
+    // solicitudes por departamento sin consultar la BD en cada request
     const token = generarToken({
-      id: user.id,
-      rol: user.rol,
-      empleado_dni: user.empleado_dni,
-      username: user.username,
+      id:              user.id,
+      rol:             user.rol,
+      empleado_dni:    user.empleado_dni,
+      username:        user.username,
+      departamento_id: user.departamento_id ?? null,
     });
+
     await user.update({ ultimo_acceso: new Date() });
     await registrarBitacora({
       tabla_afectada: 'usuarios',
-      registro_id: user.id,
-      accion: 'login',
-      descripcion: `Inicio de sesión exitoso - usuario: ${username}`,
-      empleado_dni: user.empleado_dni,
-      ip_address: req.ip,
+      registro_id:    user.id,
+      accion:         'login',
+      descripcion:    `Inicio de sesión exitoso - usuario: ${username}`,
+      empleado_dni:   user.empleado_dni,
+      ip_address:     req.ip,
     });
+
     res.json({
       token,
       user: {
-        id: user.id,
-        username: user.username,
-        rol: user.rol,
-        empleado_dni: user.empleado_dni,
+        id:              user.id,
+        username:        user.username,
+        rol:             user.rol,
+        empleado_dni:    user.empleado_dni,
+        departamento_id: user.departamento_id ?? null,
       },
     });
   } catch (error) {

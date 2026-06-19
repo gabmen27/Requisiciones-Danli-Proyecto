@@ -2,41 +2,48 @@ import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/sequelize';
 
 interface SolicitudRespuestaItemAttributes {
-  id: number;
-  respuesta_id: number;
-  numero_linea: number;
-  descripcion: string;
-  unidad: string;
-  precio_unitario: number;
+  id:                  number;
+  respuesta_id:        number;
+  numero_linea:        number;
+  descripcion:         string;
+  unidad:              string;
+  precio_unitario:     number;
   cantidad_disponible: number;
+  aplica_isv:          boolean;
 }
 
 type SolicitudRespuestaItemCreationAttributes = Optional<SolicitudRespuestaItemAttributes, 'id'>;
 
-class SolicitudRespuestaItem extends Model<SolicitudRespuestaItemAttributes, SolicitudRespuestaItemCreationAttributes> {
-  public id!: number;
-  public respuesta_id!: number;
-  public numero_linea!: number;
-  public descripcion!: string;
-  public unidad!: string;
-  public precio_unitario!: number;
-  public cantidad_disponible!: number;
+class SolicitudRespuestaItem extends Model
+<
+  SolicitudRespuestaItemAttributes,
+  SolicitudRespuestaItemCreationAttributes
+> {
+  declare id:                  number;
+  declare respuesta_id:        number;
+  declare numero_linea:        number;
+  declare descripcion:         string;
+  declare unidad:              string;
+  declare precio_unitario:     number;
+  declare cantidad_disponible: number;
+  declare aplica_isv:          boolean;
 }
 
 SolicitudRespuestaItem.init(
   {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    respuesta_id: { type: DataTypes.INTEGER, allowNull: false },
-    numero_linea: { type: DataTypes.TINYINT.UNSIGNED, allowNull: false },
-    descripcion: { type: DataTypes.TEXT, allowNull: false },
-    unidad: { type: DataTypes.STRING(30), defaultValue: 'Unidad' },
-    precio_unitario: { type: DataTypes.DECIMAL(14, 2), defaultValue: 0 },
-    cantidad_disponible: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
+    id:                  { type: DataTypes.INTEGER,          autoIncrement: true, primaryKey: true },
+    respuesta_id:        { type: DataTypes.INTEGER,          allowNull: false },
+    numero_linea:        { type: DataTypes.TINYINT.UNSIGNED, allowNull: false },
+    descripcion:         { type: DataTypes.TEXT,             allowNull: false },
+    unidad:              { type: DataTypes.STRING(30),        defaultValue: 'Unidad' },
+    precio_unitario:     { type: DataTypes.DECIMAL(14, 2),   defaultValue: 0 },
+    cantidad_disponible: { type: DataTypes.DECIMAL(10, 2),   defaultValue: 0 },
+    aplica_isv:          { type: DataTypes.TINYINT,          allowNull: false, defaultValue: 1 },
   },
   {
     sequelize,
-    tableName: 'solicitud_respuesta_items',
-    timestamps: false,
+    tableName:   'solicitud_respuesta_items',
+    timestamps:  false,
     underscored: true,
   }
 );

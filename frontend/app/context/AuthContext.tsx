@@ -1,72 +1,83 @@
 "use client";
+import { createContext, useContext, useEffect, useState } from "react";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-
-// Modelo exacto que devuelve tu backend en el campo "user"
 export interface UsuarioAuth {
   id: number;
   username: string;
-  rol: "admin" | "compras" | "bienes" | "gerencia" | "alcaldia" | "solicitante";
+  rol:
+    | "admin"
+    | "compras"
+    | "bienes"
+    | "gerencia"
+    | "alcaldia"
+    | "contabilidad"
+    | "solicitante";
   empleado_dni: string;
+  departamento_id: number | null;
 }
 
 interface AuthContextType {
   user: UsuarioAuth | null;
-  token: string | null;
-  login: (token: string, user: UsuarioAuth) => void;
-  logout: () => void;
   cargando: boolean;
+  login: (token: string, userData: UsuarioAuth) => void;
+  logout: () => void;
 }
 
-// Creamos el contexto — valor undefined para detectar si se usa fuera del Provider
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser]       = useState<UsuarioAuth | null>(null);
-  const [token, setToken]     = useState<string | null>(null);
-  const [cargando, setCargando] = useState(true); // evita flash de redirect al cargar
+export function AuthProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [user, setUser] = useState<UsuarioAuth | null>(null);
+  const [cargando, setCargando] = useState(true);
 
-  // Al montar: recuperamos sesión guardada en localStorage
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    const storedUser  = localStorage.getItem("user");
-    if (storedToken && storedUser) {
+    const cargarSesion = async () => {
       try {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+        const j = localStorage.getItem("user");
+
+        if (j) {
+          const usuarioParseado: UsuarioAuth = JSON.parse(j);
+          setUser(usuarioParseado);
+        }
       } catch {
-        // Si el JSON está corrupto, limpiamos
-        localStorage.removeItem("token");
         localStorage.removeItem("user");
+        localStorage.removeItem("token");
+      } finally {
+        setCargando(false);
       }
-    }
-    setCargando(false);
+    };
+
+    cargarSesion();
   }, []);
 
-  const login = (nuevoToken: string, nuevoUser: UsuarioAuth) => {
-    setToken(nuevoToken);
-    setUser(nuevoUser);
-    localStorage.setItem("token", nuevoToken);
-    localStorage.setItem("user", JSON.stringify(nuevoUser));
+  const login = (token: string, userData: UsuarioAuth) => {
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
   };
 
   const logout = () => {
-    setToken(null);
-    setUser(null);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, cargando }}>
+    <AuthContext.Provider value={{ user, cargando, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-// Hook personalizado — mismo patrón que tus ejercicios de clase
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth debe usarse dentro de <AuthProvider>");
+
+  if (!ctx) {
+    throw new Error("useAuth debe usarse dentro de AuthProvider");
+  }
+
   return ctx;
 }

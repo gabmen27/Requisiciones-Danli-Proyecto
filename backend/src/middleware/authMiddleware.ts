@@ -3,10 +3,11 @@ import { verificarToken } from '../utils/jwtHelper';
 
 export interface AuthRequest extends Request {
   user?: {
-    id: number;
-    rol: string;
-    empleado_dni: string;
-    username: string;
+    id:              number;
+    rol:             string;
+    empleado_dni:    string;
+    username:        string;
+    departamento_id: number | null;
   };
 }
 

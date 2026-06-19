@@ -8,7 +8,7 @@ interface SolicitudAttributes {
   departamento_id: number;
   empleado_dni: string;
   observaciones: string;
-  estado: 'pendiente' | 'respondida' | 'cancelada';
+  estado: 'pendiente' | 'en_espera' | 'respondida' | 'cancelada';
   fecha_solicitud: Date;
   fecha_respuesta: Date | null;
 }
@@ -35,7 +35,10 @@ Solicitud.init(
     departamento_id: { type: DataTypes.INTEGER, allowNull: false },
     empleado_dni: { type: DataTypes.STRING(15), allowNull: false },
     observaciones: { type: DataTypes.TEXT, allowNull: false },
-    estado: { type: DataTypes.ENUM('pendiente', 'respondida', 'cancelada'), defaultValue: 'pendiente' },
+    estado: {
+      type: DataTypes.ENUM('pendiente', 'en_espera', 'respondida', 'cancelada'),
+      defaultValue: 'pendiente',
+    },
     fecha_solicitud: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     fecha_respuesta: { type: DataTypes.DATE, allowNull: true },
   },

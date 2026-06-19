@@ -43,7 +43,7 @@ export const createUsuario = async (req: AuthRequest, res: Response) => {
     if (!empleado_dni || !username || !password || !rol) {
       return res.status(400).json({ message: 'Faltan datos obligatorios (empleado_dni, username, password, rol)' });
     }
-    const rolesValidos = ['admin', 'solicitante', 'compras', 'bienes', 'gerencia', 'alcaldia'];
+    const rolesValidos = ['admin', 'solicitante', 'compras', 'bienes', 'gerencia', 'alcaldia', 'contabilidad'];
     if (!rolesValidos.includes(rol)) {
       return res.status(400).json({ message: 'Rol inválido' });
     }
